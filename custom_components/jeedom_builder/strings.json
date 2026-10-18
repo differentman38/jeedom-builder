@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Scenario Builder",
+        "description": "Adds the Jeedom-style “Scenarios” panel to the sidebar. No settings required."
+      }
+    },
+    "abort": {
+      "already_configured": "Scenario Builder is already installed."
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Constructeur de scénarios",
+        "description": "Ajoute le panneau « Scénarios » (façon Jeedom) dans la barre latérale. Aucun réglage nécessaire."
+      }
+    },
+    "abort": {
+      "already_configured": "Le constructeur de scénarios est déjà installé."
+    }
+  }
+}
