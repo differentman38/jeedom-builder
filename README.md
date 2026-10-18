@@ -14,6 +14,8 @@
 
 Un panneau **« Scénarios »** s'ajoute dans la barre latérale. Tu construis visuellement, HA exécute du natif.
 
+![Le constructeur de scénarios dans Home Assistant](images/screenshot.png)
+
 ---
 
 ## Pourquoi ce plugin

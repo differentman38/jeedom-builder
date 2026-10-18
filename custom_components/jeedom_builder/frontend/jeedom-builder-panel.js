@@ -12,6 +12,22 @@ function entArea(eid){const e=HASS&&HASS.entities&&HASS.entities[eid];if(!e)retu
 function fname(eid){const s=HASS&&HASS.states&&HASS.states[eid];return s&&s.attributes&&s.attributes.friendly_name?s.attributes.friendly_name:eid;}
 function entsIn(area,domf){if(!HASS||!HASS.states)return [];let ids=Object.keys(HASS.states);const realf=domf&&domf.filter(Boolean);if(realf&&realf.length)ids=ids.filter(e=>realf.includes(dom(e)));if(area&&area!=='__all__')ids=ids.filter(e=>area==='__none__'?!entArea(e):entArea(e)===area);return ids.map(e=>[fname(e),e]).sort((p,q)=>p[0].localeCompare(q[0]));}
 function svcOpts(eid){const d=dom(eid);const common=[['turn_on','turn_on'],['turn_off','turn_off'],['toggle','toggle']];if(!HASS||!HASS.services||!HASS.services[d])return common;const s=Object.keys(HASS.services[d]).sort();return s.length?s.map(x=>[x,x]):common;}
+function stateOptions(eid){
+  if(!eid||!HASS||!HASS.states||!HASS.states[eid])return [];
+  const s=HASS.states[eid],a=s.attributes||{},d=dom(eid);let opts=[];
+  if(Array.isArray(a.options))opts=a.options.slice();
+  else if(d==='climate'&&Array.isArray(a.hvac_modes))opts=a.hvac_modes.slice();
+  else{const M={binary_sensor:['on','off'],switch:['on','off'],light:['on','off'],fan:['on','off'],input_boolean:['on','off'],automation:['on','off'],remote:['on','off'],siren:['on','off'],humidifier:['on','off'],script:['on','off'],update:['on','off'],
+    cover:['open','closed','opening','closing'],lock:['locked','unlocked','locking','unlocking','jammed'],
+    media_player:['playing','paused','idle','off','standby','on'],person:['home','not_home'],device_tracker:['home','not_home'],
+    alarm_control_panel:['disarmed','armed_home','armed_away','armed_night','armed_vacation','arming','pending','triggered'],
+    sun:['above_horizon','below_horizon'],vacuum:['cleaning','docked','paused','idle','returning','error'],
+    climate:['heat','cool','auto','off','dry','fan_only','heat_cool'],weather:['sunny','cloudy','rainy','pouring','partlycloudy','snowy','fog','windy','clear-night']};
+    opts=M[d]||[];}
+  const cur=s.state;if(cur&&!opts.includes(cur))opts.unshift(cur);
+  opts=opts.concat(['unavailable','unknown'].filter(x=>!opts.includes(x)));
+  return opts;
+}
 
 const TYPES={if:{c:'--scIF',leg:'Si'},action:{c:'--scAction',leg:'Action'},in:{c:'--scIN',leg:'Dans'},for:{c:'--scFOR',leg:'Pour'},variable:{c:'--scAction',leg:'Variable'},raw:{c:'--scCODE',leg:'YAML brut'}};
 const FUNCS={'Temps':['time','time_between','time_diff','duration','durationBetween','sun','formatTime'],'Commandes / États':['value','valueDate','collectDate','lastCommunication','stateDuration','lastStateDuration','lastChangeStateDuration','stateChanges'],'Déclencheur':['trigger','triggerValue','triggerChange'],'Statistiques':['average','averageBetween','min','max','median','tendance','statistics','round','odd'],'Scénario / Variables':['variable','scenario','lastScenarioExecution','tag','name'],'Divers':['randText','randomColor','color_gradient','all']};
@@ -103,6 +119,14 @@ class JeedomBuilderPanel extends HTMLElement{
     w.append(ra,re);return w;
   }
   bic(t,title,fn){const b=document.createElement('span');b.className='bic';b.textContent=t;b.title=title;b.onclick=(e)=>{e.stopPropagation();fn();};return b;}
+  stateField(node,key){
+    const id='sl_'+Math.random().toString(36).slice(2,8);
+    const inp=document.createElement('input');inp.className='fc';inp.style.width='120px';inp.value=node[key]||'';inp.setAttribute('list',id);inp.setAttribute('placeholder','état…');
+    inp.oninput=()=>{node[key]=inp.value;this.ry();};
+    const dl=document.createElement('datalist');dl.id=id;
+    stateOptions(node.entity).forEach(o=>{const op=document.createElement('option');op.value=o;dl.appendChild(op);});
+    const frag=document.createDocumentFragment();frag.append(inp,dl);return frag;
+  }
 
   newBlock(t){
     if(t==='if')return{t:'if',expr:'',then:[],els:[]};
@@ -141,7 +165,7 @@ class JeedomBuilderPanel extends HTMLElement{
 
   renderTrigs(){const host=this._root.querySelector('#jb-trigs');host.innerHTML='';
     this.trigs.forEach((tr,i)=>{const chip=document.createElement('div');chip.className='trigchip';
-      if(tr.kind==='state'){chip.append(Object.assign(document.createElement('span'),{className:'lbl',textContent:'Quand'}));chip.append(this.cmdRow(tr,['']));chip.append(Object.assign(document.createElement('span'),{className:'lbl',textContent:'passe à'}));const to=document.createElement('input');to.className='fc';to.style.width='90px';to.value=tr.to||'';to.oninput=()=>{tr.to=to.value;this.ry();};chip.append(to);}
+      if(tr.kind==='state'){chip.append(Object.assign(document.createElement('span'),{className:'lbl',textContent:'Quand'}));chip.append(this.cmdRow(tr,['']));chip.append(Object.assign(document.createElement('span'),{className:'lbl',textContent:'passe à'}));chip.append(this.stateField(tr,'to'));}
       else if(tr.kind==='time'){chip.append(Object.assign(document.createElement('span'),{className:'lbl',textContent:'À'}));const at=document.createElement('input');at.className='fc';at.style.width='90px';at.value=tr.at||'';at.oninput=()=>{tr.at=at.value;this.ry();};chip.append(at);}
       else{const ta=document.createElement('input');ta.className='fc';ta.style.flex='1';ta.value=tr.yaml||'';ta.readOnly=true;chip.append(Object.assign(document.createElement('span'),{className:'lbl',textContent:'Déclencheur brut'}),ta);}
       const k=document.createElement('select');k.className='fc';[['state','état'],['time','heure']].forEach(([v,l])=>k.appendChild(this.opt(v,l,v===tr.kind)));k.onchange=()=>{tr.kind=k.value;this.draw();};
