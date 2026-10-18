@@ -6,4 +6,4 @@ PANEL_ICON = "mdi:puzzle-edit"
 STATIC_URL = "/jeedom_builder_frontend"
 WEBCOMPONENT = "jeedom-builder-panel"
 # Incrémenter à chaque changement du JS pour casser le cache navigateur.
-FRONTEND_VERSION = "3"
+FRONTEND_VERSION = "4"
